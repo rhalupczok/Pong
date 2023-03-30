@@ -4,6 +4,14 @@ class Vec{
 		this.x = x;
 		this.y = y;
 	}
+	get len(){
+		return Math.sqrt(this.x * this.x + this.y * this.y);
+	}
+	set len(value){
+		const fact = value / this.len;
+		this.x *= fact;
+		this.y *= fact;
+	}
 }
 
 class Rect {
@@ -46,11 +54,6 @@ class Pong {
 		this._context = canvas.getContext("2d");
 
 		this.ball = new Ball;
-		this.ball.pos.x = 100;
-		this.ball.pos.y = 50;
-
-		this.ball.vel.x = 200;
-		this.ball.vel.y = 200;
 
 		this.players = [
 			new Player,
@@ -70,13 +73,18 @@ class Pong {
 			requestAnimationFrame(callback);
 		}
 		callback();
+
+		this.reset();
 	}
 
 	collide(player, ball){
 		if (player.left < ball.right && player.right > ball.left &&
 			player.top < ball.bottom && player.bottom > ball.top) {
-				ball.vel.x = -ball.vel.x
-			}
+				const len = ball.vel.len;
+				ball.vel.x = -ball.vel.x;
+				ball.vel.y += 300 * (Math.random() - .5);
+				ball.vel.len = len * 1.05;
+				}
 	}
 
 	draw(){
@@ -92,12 +100,32 @@ class Pong {
 		this._context.fillRect(rect.left, rect.top, rect.size.x, rect.size.y);
 	}
 
+	reset(){
+		this.ball.pos.x = this._canvas.width/2;
+		this.ball.pos.y = this._canvas.height/2;
+
+		this.ball.vel.x = 0;
+		this.ball.vel.y = 0;
+	}
+
+	start(){
+		if (this.ball.vel.x === 0 && this.ball.vel.y === 0) {
+			this.ball.vel.x = 300 * (Math.random() > .5 ? 1 : -1);
+			this.ball.vel.y = 300 * (Math.random() * 2 -1);
+			this.ball.vel.len = 300;
+		}
+	}
+
 	update(dt) {
 		this.ball.pos.x += this.ball.vel.x * dt;
 		this.ball.pos.y += this.ball.vel.y * dt;
 	
 		if (this.ball.left < 0 || this.ball.right > this._canvas.width){
-			this.ball.vel.x = -this.ball.vel.x;
+			const playerId = this.ball.vel.x < 0 | 0; //aofjgiafdpguiadfgiuadiuguaidgoua
+			this.players[playerId].score++
+			console.log(playerId);
+			this.reset();
+
 		}
 	
 		if (this.ball.top < 0 || this.ball.bottom > this._canvas.height){
@@ -122,3 +150,7 @@ canvas.addEventListener("mousemove", (e) => {
 canvas.addEventListener("touchmove", (e) => {
 	pong.players[0].pos.y = e.touches[0].clientY
 } )
+
+canvas.addEventListener("click", (e) => {
+	pong.start();
+});
